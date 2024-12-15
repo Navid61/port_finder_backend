@@ -6,12 +6,13 @@ import { parse } from 'csv-parse';
 // Import your Port model
 import Port from './models/port.model';
 
-const MONGO_URI = 'mongodb://localhost:27017/your_database_name';
+const MONGO_URI = 'mongodb://localhost:27017/portfilter';
 
 mongoose
-  .connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+  .connect(MONGO_URI)
   .then(() => console.log('Connected to MongoDB'))
   .catch((err) => console.error('MongoDB connection error:', err));
+
 
 const importPorts = async () => {
   const filePath = path.join(__dirname, '../data/ports.csv');

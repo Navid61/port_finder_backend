@@ -1,15 +1,12 @@
 import express from "express";
-import { Port } from "../models/port.model";
+import Port from "../models/port.model";
 
 const router = express.Router();
 
-// Fetch all ports or search by name
+// Get all ports
 router.get("/", async (req, res) => {
-  const search = req.query.search?.toString();
   try {
-    const ports = search
-      ? await Port.find({ original: new RegExp(search, "i") }) // Case-insensitive search
-      : await Port.find();
+    const ports = await Port.find();
     res.json(ports);
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch ports" });
@@ -19,9 +16,9 @@ router.get("/", async (req, res) => {
 // Add a new port
 router.post("/", async (req, res) => {
   try {
-    const port = new Port(req.body);
-    await port.save();
-    res.status(201).json(port);
+    const newPort = new Port(req.body);
+    const savedPort = await newPort.save();
+    res.status(201).json(savedPort);
   } catch (error) {
     res.status(400).json({ error: "Failed to add port" });
   }

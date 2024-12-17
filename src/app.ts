@@ -1,8 +1,8 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-
 import portRoutes from "./routes/port.routes";
+import logger from "./utils/logger";
 
 dotenv.config();
 
@@ -13,10 +13,7 @@ app.use(cors());
 app.use(express.json());
 
 // Routes
+logger.info("Initializing routes...");
 app.use("/ports", portRoutes);
-
-// MongoDB Connection (moved to server.ts)
-// const MONGO_URI = process.env.MONGO_URI || "mongodb://mongo:27017/ports";
-// connectWithRetry(MONGO_URI);
 
 export default app;

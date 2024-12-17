@@ -4,19 +4,18 @@ import { parse } from "csv-parse";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 import Port from "./models/port.model";
+import logger from "./utils/logger";
 
 dotenv.config();
 
 const waitForMongo = async (uri: string, retries = 12, delay = 5000) => {
   while (retries > 0) {
     try {
-      await mongoose.connect(uri, {
-        serverSelectionTimeoutMS: 5000, // 5 seconds timeout
-      });
-      console.log("Connected to MongoDB");
+      await mongoose.connect(uri, { serverSelectionTimeoutMS: 5000 });
+      logger.info("Connected to MongoDB");
       return;
     } catch (err: any) {
-      console.error(`MongoDB not ready yet. Retrying... (${retries} retries left)`, err.message);
+      logger.warn(`MongoDB not ready yet. Retrying... (${retries} retries left)`);
       retries--;
       await new Promise((res) => setTimeout(res, delay));
     }
@@ -27,74 +26,50 @@ const waitForMongo = async (uri: string, retries = 12, delay = 5000) => {
 const importPorts = async () => {
   try {
     const MONGO_URI = process.env.MONGO_URI || "mongodb://mongo:27017/ports";
-    console.log("Waiting for MongoDB...");
+    logger.info("Waiting for MongoDB...");
     await waitForMongo(MONGO_URI);
 
     const existingCount = await Port.countDocuments();
     if (existingCount > 0) {
-      console.log(`Skipping import. ${existingCount} ports already exist.`);
-      return; // Exit the function early
+      logger.info(`Skipping import. ${existingCount} ports already exist.`);
+      return;
     }
 
-    console.log("No data found. Importing ports...");
+    const filePath = path.join(__dirname, "../data/ports.csv");
+    if (!fs.existsSync(filePath)) throw new Error(`File not found: ${filePath}`);
 
-    // Correct the file path relative to the compiled output directory
-    const filePath = path.join(__dirname, "../data/ports.csv"); // Adjusted for `dist/` output
-    if (!fs.existsSync(filePath)) {
-      throw new Error(`File not found: ${filePath}`);
-    }
-
-    console.log(`Reading from: ${filePath}`);
+    logger.info(`Reading from file: ${filePath}`);
 
     const ports: { name: string }[] = [];
-    const parser = fs
-      .createReadStream(filePath)
-      .pipe(parse({ columns: true, skip_empty_lines: true, trim: true }));
+    const parser = fs.createReadStream(filePath).pipe(parse({ columns: true }));
 
     for await (const row of parser) {
-      if (row.original && typeof row.original === "string") {
-        ports.push({ name: row.original });
-      } else {
-        console.warn("Skipping invalid row:", row);
-      }
+      if (row.name) ports.push({ name: row.name });
     }
 
-    console.log(`Parsed ${ports.length} ports.`);
+    logger.info(`Parsed ${ports.length} ports.`);
 
-    const batchSize = 1000; // Adjust batch size for performance
+    const batchSize = 1000;
     for (let i = 0; i < ports.length; i += batchSize) {
       const batch = ports.slice(i, i + batchSize);
       try {
         const result = await Port.insertMany(batch, { ordered: false });
-        console.log(
-          `Inserted batch ${Math.ceil((i + batchSize) / batchSize)} of ${Math.ceil(
-            ports.length / batchSize
-          )}. Inserted ${result.length} documents.`
-        );
+        logger.info(`Inserted batch of ${result.length} documents.`);
       } catch (error: any) {
-        if (error.code === 11000) {
-          console.error(
-            `Duplicate key error in batch ${Math.ceil((i + batchSize) / batchSize)}: Skipping duplicates.`
-          );
-        } else {
-          console.error(
-            `Failed to insert batch ${Math.ceil((i + batchSize) / batchSize)}:`,
-            error
-          );
-        }
+        logger.error(`Failed to insert batch: ${error.message}`);
       }
     }
 
-    console.log("Import complete!");
+    logger.info("Import complete!");
   } catch (err) {
-    console.error("Import error:", err);
+    const error = err as Error; // Explicitly cast to Error
+    logger.error(`Import error: ${error.message}`);
   } finally {
     if (mongoose.connection.readyState === 1) {
-      console.log("Disconnecting from MongoDB...");
       await mongoose.disconnect();
-      console.log("Disconnected from MongoDB.");
+      logger.info("Disconnected from MongoDB.");
     }
   }
 };
 
-importPorts().catch((err) => console.error("Unhandled error:", err));
+importPorts();

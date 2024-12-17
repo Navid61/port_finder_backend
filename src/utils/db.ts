@@ -1,9 +1,10 @@
 import mongoose, { ConnectOptions } from "mongoose";
+import logger from "./logger";
 
 interface RetryOptions {
   maxRetries?: number;
   retryDelayMs?: number;
-  initialDelayMs?: number; // Optional initial delay
+  initialDelayMs?: number;
 }
 
 export const connectWithRetry = async (mongoUri: string, options: RetryOptions = {}): Promise<void> => {
@@ -11,35 +12,31 @@ export const connectWithRetry = async (mongoUri: string, options: RetryOptions =
   let retries = 0;
 
   if (initialDelayMs > 0) {
-    console.log(`Waiting ${initialDelayMs / 1000} seconds before initial connection attempt...`);
-    await new Promise(resolve => setTimeout(resolve, initialDelayMs));
+    logger.info(`Waiting ${initialDelayMs / 1000} seconds before initial connection attempt...`);
+    await new Promise((resolve) => setTimeout(resolve, initialDelayMs));
   }
 
   const mongooseOptions: ConnectOptions = {
     connectTimeoutMS: 30000,
     serverSelectionTimeoutMS: 30000,
-    autoIndex: true, // Good for development, consider false for production
+    autoIndex: true,
   };
 
   while (retries < maxRetries) {
     try {
-      console.log(`Attempting to connect to MongoDB at ${mongoUri}...`);
+      logger.info(`Attempting to connect to MongoDB at ${mongoUri}...`);
       await mongoose.connect(mongoUri, mongooseOptions);
-      console.log("Connected to MongoDB!");
+      logger.info("Connected to MongoDB!");
       return;
     } catch (error: any) {
       retries++;
-      console.error(`MongoDB connection attempt ${retries} failed: ${error.message}. Retrying in ${retryDelayMs / 1000} seconds...`);
-
+      logger.warn(`MongoDB connection attempt ${retries} failed: ${error.message}. Retrying in ${retryDelayMs / 1000} seconds...`);
       if (retries >= maxRetries) {
-        console.error(`Max retries exceeded. Could not connect to MongoDB at ${mongoUri}.`);
-        if (mongoose.connection.readyState === 1) {
-          await mongoose.disconnect();
-        }
+        logger.error(`Max retries exceeded. Could not connect to MongoDB.`);
+        if (mongoose.connection.readyState === 1) await mongoose.disconnect();
         process.exit(1);
       }
-
-      await new Promise(resolve => setTimeout(resolve, retryDelayMs));
+      await new Promise((resolve) => setTimeout(resolve, retryDelayMs));
     }
   }
 };

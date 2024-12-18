@@ -1,6 +1,5 @@
 import mongoose, { ConnectOptions } from "mongoose";
 import logger from "./logger";
-import { exitHandler } from "./exitHandler";
 
 interface RetryOptions {
   maxRetries?: number;
@@ -28,20 +27,15 @@ export const connectWithRetry = async (mongoUri: string, options: RetryOptions =
       logger.info(`Attempting to connect to MongoDB at ${mongoUri}...`);
       await mongoose.connect(mongoUri, mongooseOptions);
       logger.info("Connected to MongoDB!");
-      return; // Exit the function after a successful connection
+      return;
     } catch (error: any) {
       retries++;
       logger.warn(`MongoDB connection attempt ${retries} failed: ${error.message}. Retrying in ${retryDelayMs / 1000} seconds...`);
-
       if (retries >= maxRetries) {
         logger.error(`Max retries exceeded. Could not connect to MongoDB.`);
-        if (mongoose.connection.readyState === 1) {
-          await mongoose.disconnect();
-        }
-        exitHandler(1); // Call exitHandler if max retries are reached
+        if (mongoose.connection.readyState === 1) await mongoose.disconnect();
+        process.exit(1);
       }
-
-      // Wait before retrying
       await new Promise((resolve) => setTimeout(resolve, retryDelayMs));
     }
   }

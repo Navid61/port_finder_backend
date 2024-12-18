@@ -17,13 +17,17 @@ describe("Port Routes", () => {
     app.use("/ports", portRoutes); // Add port routes
   });
 
+  beforeEach(() => {
+    jest.spyOn(console, "error").mockImplementation(() => {}); // Suppress console.error
+  });
+
   afterEach(() => {
+    jest.restoreAllMocks(); // Restore original behavior
     jest.clearAllMocks(); // Clear all mocks after each test
   });
 
   describe("GET /ports", () => {
     it("should return all ports", async () => {
-      // Mock the behavior of Port.find
       mockedPort.find.mockResolvedValue([{ name: "Port A" }, { name: "Port B" }]);
 
       const response = await request(app).get("/ports");
@@ -46,7 +50,6 @@ describe("Port Routes", () => {
 
   describe("POST /ports", () => {
     it("should add a new port", async () => {
-      // Mock the behavior of saving a new port
       const newPort = { name: "Port C" };
       const savedPort = { _id: "123", ...newPort };
 

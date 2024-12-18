@@ -3,7 +3,7 @@ import path from "path";
 import { parse } from "csv-parse";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
-import Port from "./models/port.model";
+import Port from "../models/port.model";
 
 dotenv.config();
 
@@ -39,7 +39,7 @@ const importPorts = async () => {
     console.log("No data found. Importing ports...");
 
     // Correct the file path relative to the compiled output directory
-    const filePath = path.join(__dirname, "../data/ports.csv"); // Adjusted for `dist/` output
+    const filePath = path.join(__dirname, "../../data/ports.csv"); // Adjusted for `dist/` output
     if (!fs.existsSync(filePath)) {
       throw new Error(`File not found: ${filePath}`);
     }

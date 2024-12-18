@@ -3,8 +3,8 @@ import path from "path";
 import { parse } from "csv-parse";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
-import Port from "./models/port.model";
-import logger from "./utils/logger";
+import Port from "../models/port.model";
+import logger from "./logger";
 
 dotenv.config();
 
@@ -73,3 +73,6 @@ const importPorts = async () => {
 };
 
 importPorts();
+
+// Export the function for external use or testing
+export default importPorts;

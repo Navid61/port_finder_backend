@@ -4,6 +4,8 @@ import path from "path";
 
 // Ensure the logs folder exists
 const logsDir = path.join(__dirname, "../../logs");
+//
+console.log('logsDir ', logsDir)
 if (!fs.existsSync(logsDir)) {
   fs.mkdirSync(logsDir); // Create the logs directory if it doesn't exist
 }

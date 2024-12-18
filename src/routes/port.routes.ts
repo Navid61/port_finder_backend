@@ -4,15 +4,6 @@ import Port from "../models/port.model";
 const router = express.Router();
 
 // Get all ports
-// router.get("/", async (req: Request, res: Response): Promise<void> => {
-//   try {
-//     const ports = await Port.find();
-//     res.json(ports);
-//   } catch (error) {
-//     console.error("Error fetching ports:", error);
-//     res.status(500).json({ error: "Failed to fetch ports" });
-//   }
-// });
 
 router.get("/", async (req, res) => {
   try {

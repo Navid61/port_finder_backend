@@ -35,7 +35,7 @@ const importPorts = async () => {
       return;
     }
 
-    const filePath = path.join(__dirname, "../../data/ports.csv");
+    const filePath = path.join(__dirname, "../data/ports.csv");
     if (!fs.existsSync(filePath)) throw new Error(`File not found: ${filePath}`);
 
     logger.info(`Reading from file: ${filePath}`);

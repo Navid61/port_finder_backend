@@ -20,4 +20,4 @@ RUN npm run build
 EXPOSE 5000
 
 # Run the `importPorts.ts` script and start the server
-CMD ["sh", "-c", "node dist/utils/importPorts.js && npm start"]
+CMD ["sh", "-c", "node dist/importPorts.js && npm start"]

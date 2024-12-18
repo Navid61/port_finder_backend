@@ -3,8 +3,8 @@ import path from "path";
 import { parse } from "csv-parse";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
-import Port from "../models/port.model";
-import logger from "./logger";
+import Port from "./models/port.model";
+import logger from "./utils/logger";
 
 dotenv.config();
 
